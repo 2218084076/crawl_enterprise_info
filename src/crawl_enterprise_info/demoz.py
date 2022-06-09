@@ -1,13 +1,17 @@
-# proxy = settings.get('proxy_list')
-# print(proxy)
-import logging
+import asyncio
+import random
 
-from crawl_enterprise_info.config import settings
+import aiohttp
 
-mongo_url = settings.MONGO_URL
-proxy = settings.PROXY_LIST
-headers = settings.HEADERS
-print(mongo_url)
-print(proxy)
-print(headers)
-logging.warning('AA')
+from config import settings
+
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        async with session.get('https://b2b.11467.com/',
+                               headers=settings.HEADERS) as response:
+            print(response.status)
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
