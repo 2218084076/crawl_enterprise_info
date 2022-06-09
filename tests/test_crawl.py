@@ -9,5 +9,5 @@ def test_get_md5():
     assert md5 == '098f6bcd4621d373cade4e832627b4f6'
 
 
-def test_add_url():
+def test_add_url(mocker):
     """test add url"""

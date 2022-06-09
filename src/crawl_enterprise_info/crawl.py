@@ -1,8 +1,10 @@
+import asyncio
 import hashlib
 import logging
 import random
 import time
 
+import aiohttp
 import redis
 import requests
 from bs4 import BeautifulSoup
@@ -10,9 +12,9 @@ from bs4 import BeautifulSoup
 from crawl_enterprise_info.config import settings
 from crawl_enterprise_info.storage.redis_storage import save_redis
 
-logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG,
-                    format=' %(asctime)s - %(levelname)s- %(message)s - %(funcName)s - %(lineno)d: ')
+                    format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ')
+
 
 # start_urls = ['//b2b.11467.com/search/1.htm', '//b2b.11467.com/search/35.htm', '//b2b.11467.com/search/62.htm',
 #               '//b2b.11467.com/search/549.htm', '//b2b.11467.com/search/563.htm', '//b2b.11467.com/search/578.htm',
@@ -66,15 +68,6 @@ logging.basicConfig(level=logging.DEBUG,
 #               '//b2b.11467.com/search/-6c348f6c53706c348d34.htm',
 #               '//b2b.11467.com/search/-5de54e1a4e9280547f515b9e8bad.htm',
 #               '//b2b.11467.com/search/-516c4f1a51659a7b.htm', '//b2b.11467.com/search/-5b9e8bad5ba45e7353f0.htm']
-proxy_ip = ['123.57.73.111', '39.99.142.251', '39.105.36.97', '36.7.108.56', '123.56.124.235', '120.194.150.70',
-            '120.220.220.95', '106.75.171.235', '221.4.241.198', '39.155.253.58', '219.246.65.55', '59.110.232.133',
-            '39.100.93.159', '39.105.194.93', '36.137.23.49', '222.65.228.96', '39.105.102.47', '45.120.103.37',
-            '123.56.106.161', '101.200.164.21', '118.31.1.154', '182.61.201.201', '121.41.77.111', '39.105.191.159',
-            '123.56.175.31', '113.194.210.253', '182.92.77.108', '47.104.237.35', '182.92.64.225', '116.31.75.39',
-            '59.110.239.109', '124.226.194.135', '111.225.153.148', '121.43.148.95', '222.211.72.19', '123.56.160.181',
-            '49.85.96.80', '47.93.86.229', '47.95.117.151', '39.106.24.13', '47.94.144.13', '58.20.232.245',
-            '121.43.183.203', '139.196.90.48', '124.90.210.149', '121.199.78.228', '47.106.160.24', '39.107.79.187',
-            '58.246.230.36', '39.105.61.139']
 
 
 def get_md5(val):
@@ -102,28 +95,29 @@ def add_url(url) -> bool:
         return True
 
 
-def crawl_city_category():
+async def crawl_city_category():
     """crawl city category"""
     city_category_list = []
-    response = requests.get(settings.CITY_URL,
-                            headers=settings.HEADERS,
-                            proxies=random.choice(settings.PROXY_LIST)
-                            )
-    logger.debug('get %s' % response)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    box_list = soup.find_all('a')
-    n = 1
-    for d in box_list:
-        url = d.get('href')
-        if 'www' in url and 'http' not in url:
-            url = 'http:' + url
-            if len(list(url)) > 19:
-                city_category_list.append(url)
-                n += 1
-    return city_category_list
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get('https://b2b.11467.com/',
+                                   headers=settings.HEADERS) as response:
+                logging.debug('get %s ' % response)
+                soup = BeautifulSoup(await response.text(), 'html.parser')
+                box_list = soup.find_all('a')
+                for d in box_list:
+                    url = d.get('href')
+                    if 'www' in url and 'http' not in url:
+                        url = 'http:' + url
+                        if len(list(url)) > 19:
+                            city_category_list.append(url)
+                logging.debug(city_category_list)
+                return city_category_list
+        except Exception as e:
+            logging.debug('Error %s' % e)
 
 
-def crawl_main_category_url(city_list: list):
+async def crawl_main_category_url(city_list: list):
     """
     crawl main category url
     :param city_list:
@@ -131,76 +125,72 @@ def crawl_main_category_url(city_list: list):
     """
     for u in city_list:
         time.sleep(random.randint(3, 8))
-        response = requests.get(u,
-                                headers=settings.HEADERS,
-                                proxies=random.choice(settings.PROXY_LIST)
-                                )
-        logging.debug('Get <%s>' % u)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        box_list = soup.find_all('a')
-        for i in box_list:
-            url = i['href']
-            if 'https://www.11467.com/' in url:
-                save_redis(settings.get('main_category_name'), url)
-                # logging.debug('<%s> save %s' % (url, settings.get('detailed_category_name')))
-        else:
-            logging.debug('已存在')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(u, headers=settings.HEADERS) as response:
+                logging.debug('Get <%s>' % u)
+                soup = BeautifulSoup(await response.text(), 'html.parser')
+                box_list = soup.find_all('a')
+                for i in box_list:
+                    url = i['href']
+                    if add_url(url):
+                        if 'https://www.11467.com/' in url:
+                            save_redis(settings.get('main_category_name'), url)
+                            # logging.debug('<%s> save %s' % (url, settings.get('main_category_name')))
+                    else:
+                        logging.debug('已存在')
 
 
-def crawl_detailed_category(main_category: list):
+async def crawl_detailed_category(main_category: list):
     """
     crawl crawl category
     :param main_category:
     :return:
     """
     for u in main_category:
-
         if 'http' not in u:
             u = 'https' + u
             logging.debug(u)
             time.sleep(random.randint(5, 10))
-            response = requests.get(u,
-                                    headers=settings.HEADERS,
-                                    proxies=random.choice(settings.PROXY_LIST)
-                                    )
-            time.sleep(random.randint(5, 10))
-            soup = BeautifulSoup(response.text, 'html.parser')
-            box_list = soup.find_all('a')
-            for i in box_list:
-                url = i['href']
-                if 'search/' in url:
-                    save_redis(settings.get('detailed_category_name'), url)
-                    # logger.debug('<%s> save %s' % (url, settings.get('detailed_category_name')))
-                if 'https://www.11467.com/' in url and '.htm' in url:
-                    save_redis(settings.get('detailed_category_name'), url)
-                    # logger.debug('<%s> save %s' % (url, settings.get('detailed_category_name')))
-                if '//www.11467.com/' in url and 'http' not in url and url != '//www.11467.com/':
-                    url = 'https:' + url
-                    save_redis(settings.get('company_redis_name'), url)
-                    logger.debug('<%s> save redis %s' % (url, settings.get('company_redis_name')))
-        else:
-            logging.debug('已存在')
+            async with aiohttp.ClientSession() as session:
+                async with session.get(u, headers=settings.HEADERS) as response:
+                    logging.debug('Get %s' % response)
+                    await asyncio.sleep(random.randint(3, 8))
+                    soup = BeautifulSoup(await response.text(), 'html.parser')
+                    box_list = soup.find_all('a')
+                    for i in box_list:
+                        url = i['href']
+                        if 'search/' in url:
+                            save_redis(settings.get('detailed_category_name'), url)
+                            # logging.debug('<%s> save %s' % (url, settings.get('detailed_category_name')))
+                        if 'https://www.11467.com/' in url and '.htm' in url:
+                            save_redis(settings.get('detailed_category_name'), url)
+                            # logging.debug('<%s> save %s' % (url, settings.get('detailed_category_name')))
+                        if '//www.11467.com/' in url and 'http' not in url and url != '//www.11467.com/':
+                            url = 'https:' + url
+                            save_redis(settings.get('company_redis_name'), url)
+                            logging.debug('<%s> save redis %s' % (url, settings.get('company_redis_name')))
 
 
-def crawl_company_link(url: str):
+async def crawl_company_link(url: str):
     """
     crawl company link
     :param url:
     :return:
     """
     if add_url(url):
-        response = requests.get(url, headers=settings.HEADERS)
-        time.sleep(random.randint(5, 10))
-        soup = BeautifulSoup(response.text, 'html.parser')
-        box_list = soup.find_all('a')
-        for i in box_list:
-            url = i['href']
-            if '//www.11467.com/' in url and 'http' not in url and url != '//www.11467.com/':
-                url = 'https:' + url
-                save_redis(settings.get('company_redis_name'), url)
-                # logger.debug('<%s> save redis %s' % (url, settings.get('company_redis_name')))
-            else:
-                logging.debug('已存在')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=settings.HEADERS) as response:
+                await asyncio.sleep(random.randint(5, 10))
+                soup = BeautifulSoup(await response.text(), 'html.parser')
+                box_list = soup.find_all('a')
+                for i in box_list:
+                    url = i['href']
+                    if '//www.11467.com/' in url and 'http' not in url and url != '//www.11467.com/':
+                        url = 'https:' + url
+                        save_redis(settings.get('company_redis_name'), url)
+                        # logging.debug('<%s> save redis %s' % (url, settings.get('company_redis_name')))
+    else:
+        logging.debug('已存在')
 
 
 def parse_company_info(url: str) -> dict:
@@ -238,12 +228,9 @@ def parse_company_info(url: str) -> dict:
                 "company_code": result_json.get('顺企编码：', ''),
                 "shop_link": result_json.get('商铺：', '')
             }
-            logger.debug('parse <%s> info is %s' % (url, info_json))
+            logging.debug('parse <%s> info is %s' % (url, info_json))
             return info_json
         else:
             save_redis(settings.get('rollback'), url)
     else:
         logging.debug('已存在')
-
-
-parse_company_info('https://www.11467.com/chengdu/co/274566.htm')
