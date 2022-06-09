@@ -1,0 +1,26 @@
+headers:
+  { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36' }
+
+city_url:
+  'https://b2b.11467.com/'
+
+
+proxy_list:
+  [
+    { 'https': '43.155.111.39:80' },
+    { 'https': '135.125.206.30:3128' },
+    { 'https': '185.235.43.196:8118' },
+    { 'https': '183.245.6.120:8080' },
+    { 'https': '43.154.116.249:8118' }
+  ]
+mongo_url: 'mongodb://localhost:27017'
+
+city_redis_name: 'city_category'
+
+main_category_name: 'main_category_urls'
+
+detailed_category_name: 'detailed_category'
+
+company_redis_name: 'company_link'
+
+rollback: 'rollback_company'
