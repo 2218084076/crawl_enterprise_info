@@ -25,7 +25,7 @@ async def all_category_to_redis():
     all category to redis
     :return:
     """
-    city_category_list = await crawl_city_category()
+    city_category_list = await crawl_city_category('https://b2b.11467.com/')
     for city in city_category_list:
         logger.debug('<%s> save %s' % (city, settings.get('city_redis_name')))
         save_redis(settings.get('city_redis_name'), city)

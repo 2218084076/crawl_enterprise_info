@@ -44,7 +44,7 @@ def add_url(url) -> bool:
         return True
 
 
-async def crawl_city_category():
+async def crawl_city_category(url):
     """
     抓取所有城市分类连接
     :return:
@@ -52,7 +52,7 @@ async def crawl_city_category():
     city_category_list = []
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get('https://b2b.11467.com/',
+            async with session.get(url,
                                    headers=settings.HEADERS) as response:
                 logger.debug('get %s ' % response)
                 await asyncio.sleep(random.randint(5, 10))
