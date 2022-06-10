@@ -12,7 +12,12 @@ from crawl_enterprise_info.storage.mongodb_storage import init_mongo
 from crawl_enterprise_info.storage.redis_storage import (read_redis_list,
                                                          save_redis)
 
-logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %(message)s - %(funcName)s')
+logging.basicConfig(level=logging.DEBUG,
+                    format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ',
+                    # filename='logfile.log',
+                    # filemode='w'
+                    )
+logger = logging.getLogger()
 
 
 async def all_category_to_redis():
@@ -22,7 +27,7 @@ async def all_category_to_redis():
     """
     city_category_list = await crawl_city_category()
     for city in city_category_list:
-        logging.debug('<%s> save %s' % (city, settings.get('city_redis_name')))
+        logger.debug('<%s> save %s' % (city, settings.get('city_redis_name')))
         save_redis(settings.get('city_redis_name'), city)
 
 
@@ -33,7 +38,7 @@ async def main_category_tesk():
     """
     city_category_list = read_redis_list('city_category')
     await crawl_main_category_url(city_category_list)
-    logging.debug('Complete main category')
+    logger.debug('Complete main category')
 
 
 async def detailed_category_task():
@@ -43,7 +48,7 @@ async def detailed_category_task():
     """
     main_category = await read_redis_list('main_category_urls')
     await crawl_detailed_category(main_category)
-    logging.debug('complete detailed category')
+    logger.debug('complete detailed category')
 
 
 async def company_link_task():
@@ -56,7 +61,7 @@ async def company_link_task():
         if 'http' not in url:
             url = 'https:' + url
             await crawl_company_link(url)
-            logging.debug('%s save detailed_category' % url)
+            logger.debug('%s save detailed_category' % url)
 
 
 async def parse_task():

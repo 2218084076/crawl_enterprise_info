@@ -1,5 +1,5 @@
 """Test crawl"""
-from crawl_enterprise_info.crawl import get_md5, add_url
+from crawl_enterprise_info.crawl import add_url, get_md5
 
 
 def test_get_md5():
