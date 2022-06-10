@@ -6,7 +6,6 @@ import time
 
 import aiohttp
 import redis
-import requests
 from bs4 import BeautifulSoup
 
 from crawl_enterprise_info.config import settings
@@ -88,7 +87,7 @@ def add_url(url) -> bool:
     :return:
     """
     red = redis.Redis(host='localhost', port=6379, db=0)
-    res = red.sadd('TEST:urlset', get_md5(url))  # 注意是 保存set的方式
+    res = red.sadd(settings.URLSET, get_md5(url))  # 注意是 保存set的方式
     if res == 0:  # 若返回0,说明插入不成功，表示有重复
         return False
     else:
@@ -96,13 +95,17 @@ def add_url(url) -> bool:
 
 
 async def crawl_city_category():
-    """crawl city category"""
+    """
+    抓取所有城市分类连接
+    :return:
+    """
     city_category_list = []
     async with aiohttp.ClientSession() as session:
         try:
             async with session.get('https://b2b.11467.com/',
                                    headers=settings.HEADERS) as response:
                 logging.debug('get %s ' % response)
+                await asyncio.sleep(random.randint(5, 10))
                 soup = BeautifulSoup(await response.text(), 'html.parser')
                 box_list = soup.find_all('a')
                 for d in box_list:
@@ -120,6 +123,7 @@ async def crawl_city_category():
 async def crawl_main_category_url(city_list: list):
     """
     crawl main category url
+    抓取city下面主要分类链接
     :param city_list:
     :return:
     """
@@ -128,6 +132,7 @@ async def crawl_main_category_url(city_list: list):
         async with aiohttp.ClientSession() as session:
             async with session.get(u, headers=settings.HEADERS) as response:
                 logging.debug('Get <%s>' % u)
+                await asyncio.sleep(random.randint(5, 10))
                 soup = BeautifulSoup(await response.text(), 'html.parser')
                 box_list = soup.find_all('a')
                 for i in box_list:
@@ -143,6 +148,7 @@ async def crawl_main_category_url(city_list: list):
 async def crawl_detailed_category(main_category: list):
     """
     crawl crawl category
+    抓取主分类下所有详细分类链接
     :param main_category:
     :return:
     """
@@ -154,7 +160,7 @@ async def crawl_detailed_category(main_category: list):
             async with aiohttp.ClientSession() as session:
                 async with session.get(u, headers=settings.HEADERS) as response:
                     logging.debug('Get %s' % response)
-                    await asyncio.sleep(random.randint(3, 8))
+                    await asyncio.sleep(random.randint(5, 10))
                     soup = BeautifulSoup(await response.text(), 'html.parser')
                     box_list = soup.find_all('a')
                     for i in box_list:
@@ -174,6 +180,7 @@ async def crawl_detailed_category(main_category: list):
 async def crawl_company_link(url: str):
     """
     crawl company link
+    通过上面详细分类页面抓取所有公司详情页链接
     :param url:
     :return:
     """
@@ -193,44 +200,46 @@ async def crawl_company_link(url: str):
         logging.debug('已存在')
 
 
-def parse_company_info(url: str) -> dict:
+async def parse_company_info(url: str) -> dict:
     """
     parse company info
+    解析公司详情页工商信息
     :param url:
     :return:
     """
     if add_url(url):
-        response = requests.get(url,
-                                headers=settings.HEADERS,
-                                proxies=random.choice(settings.PROXY_LIST)
-                                )
-        logging.debug('response.status_code %s ' % response.status_code)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            info_box = soup.find_all('td')
-            info_list = []
-            for i in info_box:
-                info_list.append(i.get_text())
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url,
+                                   headers=settings.HEADERS,
+                                   ) as response:
+                logging.debug('response.status_code %s ' % response.status)
+                await asyncio.sleep(random.randint(5, 10))
+                if response.status == 200:
+                    soup = BeautifulSoup(await response.text(), 'html.parser')
+                    info_box = soup.find_all('td')
+                    info_list = []
+                    for i in info_box:
+                        info_list.append(i.get_text())
 
-            key_list = info_list[::2]
-            value_list = info_list[1::2]
-            result_json = dict(zip(key_list, value_list))
-            info_json = {
-                "company_name": result_json.get('法人名称：', ''),
-                "product": result_json.get('主要经营产品：', ''),
-                "business_scope": result_json.get('经营范围：', ''),
-                "license_num": result_json.get('营业执照：', ''),
-                "business_status": result_json.get('经营状态：', ''),
-                "business_model": result_json.get('经营模式：', ''),
-                "capital": result_json.get('注册资本：', ''),
-                "category": result_json.get('所属分类：', ''),
-                "city": result_json.get('所属城市：', ''),
-                "company_code": result_json.get('顺企编码：', ''),
-                "shop_link": result_json.get('商铺：', '')
-            }
-            logging.debug('parse <%s> info is %s' % (url, info_json))
-            return info_json
-        else:
-            save_redis(settings.get('rollback'), url)
+                    key_list = info_list[::2]
+                    value_list = info_list[1::2]
+                    result_json = dict(zip(key_list, value_list))
+                    info_json = {
+                        "company_name": result_json.get('法人名称：', ''),
+                        "product": result_json.get('主要经营产品：', ''),
+                        "business_scope": result_json.get('经营范围：', ''),
+                        "license_num": result_json.get('营业执照：', ''),
+                        "business_status": result_json.get('经营状态：', ''),
+                        "business_model": result_json.get('经营模式：', ''),
+                        "capital": result_json.get('注册资本：', ''),
+                        "category": result_json.get('所属分类：', ''),
+                        "city": result_json.get('所属城市：', ''),
+                        "company_code": result_json.get('顺企编码：', ''),
+                        "shop_link": result_json.get('商铺：', '')
+                    }
+                    logging.debug('parse <%s> info is %s' % (url, info_json))
+                    return info_json
+                else:
+                    save_redis(settings.get('rollback'), url)
     else:
         logging.debug('已存在')

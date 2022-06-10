@@ -4,7 +4,18 @@ headers:
 city_url:
   'https://b2b.11467.com/'
 
-urlset: 'TEST:urlset'
+
+proxy_pool:
+  [
+    { 'https': '43.155.111.39:80' },
+    { 'https': '135.125.206.30:3128' },
+    { 'https': '185.235.43.196:8118' },
+    { 'https': '43.154.116.249:8118' }
+  ]
+
+ip_pool: [ 'https://37.120.192.154:8080' ]
+
+urlset: 'urlset'
 
 mongo_url: 'mongodb://localhost:27017'
 

@@ -1,5 +1,5 @@
 """Test crawl"""
-from crawl_enterprise_info.crawl import get_md5
+from crawl_enterprise_info.crawl import get_md5, add_url
 
 
 def test_get_md5():
@@ -11,3 +11,4 @@ def test_get_md5():
 
 def test_add_url(mocker):
     """test add url"""
+    add_url('test')

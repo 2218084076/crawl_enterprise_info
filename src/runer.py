@@ -16,6 +16,10 @@ logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %
 
 
 async def all_category_to_redis():
+    """
+    all category to redis
+    :return:
+    """
     city_category_list = await crawl_city_category()
     for city in city_category_list:
         logging.debug('<%s> save %s' % (city, settings.get('city_redis_name')))
@@ -33,12 +37,20 @@ async def main_category_tesk():
 
 
 async def detailed_category_task():
+    """
+    detailed category task
+    :return:
+    """
     main_category = await read_redis_list('main_category_urls')
     await crawl_detailed_category(main_category)
     logging.debug('complete detailed category')
 
 
 async def company_link_task():
+    """
+    company link task
+    :return:
+    """
     detailed_category = await read_redis_list('detailed_category')
     for url in detailed_category:
         if 'http' not in url:
@@ -54,25 +66,28 @@ async def parse_task():
     """
     company_urls = read_redis_list(settings.get('company_redis_name'))
     for url in company_urls:
-        company_info = parse_company_info(url)
-        logging.debug('Get %s company_info %s ' % (url, company_info))
+        company_info = await parse_company_info(url)
         if company_info:
             init_mongo(company_info)
 
 
 async def rollback_task():
+    """
+    rollback task
+    :return:
+    """
     rollback_company = read_redis_list(settings.get('rollback'))
     for url in rollback_company:
-        company_info = parse_company_info(url)
+        company_info = await parse_company_info(url)
         init_mongo(company_info)
 
 
 async def main():
     """
-    main
+    main tesk
     :return:
     """
-    # await all_category_to_redis()
+    await all_category_to_redis()
     await main_category_tesk()
     await detailed_category_task()
     await company_link_task()
@@ -83,3 +98,4 @@ async def main():
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
+    asyncio.run(main())
