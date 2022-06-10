@@ -1,8 +1,8 @@
 """Test main"""
 import pytest
 
-from runer import (company_link_task, main, main_category_tesk, parse_task,
-                   rollback_task)
+from crawl_enterprise_info.runer import (company_link_task, main, main_category_tesk, parse_task,
+                                         rollback_task)
 
 
 @pytest.mark.asyncio

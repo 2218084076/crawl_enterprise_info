@@ -15,7 +15,7 @@ proxy_pool:
 
 ip_pool: [ 'https://37.120.192.154:8080' ]
 
-urlset: 'urlset'
+#urlset: 'urlset'
 
 mongo_url: 'mongodb://localhost:27017'
 
