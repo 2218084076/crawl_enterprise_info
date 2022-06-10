@@ -88,7 +88,7 @@ def add_url(url) -> bool:
     :return:
     """
     red = redis.Redis(host='localhost', port=6379, db=0)
-    res = red.sadd('TEST:urlset', get_md5(url))  # 注意是 保存set的方式
+    res = red.sadd(settings.URLSET, get_md5(url))  # 注意是 保存set的方式
     if res == 0:  # 若返回0,说明插入不成功，表示有重复
         return False
     else:
@@ -96,7 +96,10 @@ def add_url(url) -> bool:
 
 
 async def crawl_city_category():
-    """crawl city category"""
+    """
+    抓取所有城市分类连接
+    :return:
+    """
     city_category_list = []
     async with aiohttp.ClientSession() as session:
         try:
@@ -120,6 +123,7 @@ async def crawl_city_category():
 async def crawl_main_category_url(city_list: list):
     """
     crawl main category url
+    抓取city下面主要分类链接
     :param city_list:
     :return:
     """
@@ -143,6 +147,7 @@ async def crawl_main_category_url(city_list: list):
 async def crawl_detailed_category(main_category: list):
     """
     crawl crawl category
+    抓取主分类下所有详细分类链接
     :param main_category:
     :return:
     """
@@ -174,6 +179,7 @@ async def crawl_detailed_category(main_category: list):
 async def crawl_company_link(url: str):
     """
     crawl company link
+    通过上面详细分类页面抓取所有公司详情页链接
     :param url:
     :return:
     """
@@ -196,6 +202,7 @@ async def crawl_company_link(url: str):
 def parse_company_info(url: str) -> dict:
     """
     parse company info
+    解析公司详情页工商信息
     :param url:
     :return:
     """
