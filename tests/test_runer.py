@@ -13,7 +13,7 @@ async def test_main(mocker):
     mock_rollback_task = mocker.patch.object(rollback_task)
     mock_parse_task = mocker.patch.object(parse_task)
     mock_company_link_task = mocker.patch.object(company_link_task)
-    mock_main()
+    await mock_main()
     mock_rollback_task.assert_called()
     mock_company_link_task.assert_called()
     mock_parse_task.assert_called()
