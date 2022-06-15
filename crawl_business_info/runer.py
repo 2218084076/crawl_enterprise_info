@@ -11,11 +11,11 @@ configure_logging()
 settings = get_project_settings()
 
 runner = CrawlerRunner(settings)
-runner.crawl(CityCategorySpider)
+# runner.crawl(CityCategorySpider)
 # runner.crawl(ParseMainCategory)
 # runner.crawl(ParseDetailCategory)
 # runner.crawl(ParseCompanyLink)
-# runner.crawl(ParseCompanyInfo)
+runner.crawl(ParseCompanyInfo)
 d = runner.join()
 d.addBoth(lambda _: reactor.stop())
 

@@ -3,26 +3,29 @@ import logging
 
 import pymongo
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(filename='example.log',
+                    encoding='utf-8',
+                    level=logging.DEBUG,
+                    format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ',
+                    )
 
 
-def init_mongo(company_info: dict):
-    """
-    init mongoDB
-    :param company_info:
-    """
-    client = pymongo.MongoClient('localhost:27017')
+class CompanyInfoMongo:
 
-    save_to_mongo(company_info, client)
+    def __init__(self):
+        self.mydb = None
+        self.my_col = None
+        self.db_name = 'company_info'
+        self.collection_name = 'company_info'
+        self.my_client = pymongo.MongoClient('localhost:27017')
 
-
-def save_to_mongo(company_info: dict, my_client):
-    """
-    company info save to mongo
-    :param company_info:
-    :param my_client:
-    """
-    mydb = my_client['company_info']
-    print(mydb.list_collection_names())
-    x = mydb['company info'].insert_one(company_info)  # 增
-    logger.debug('save %s' % company_info)
+    def save_company_info(self, company_info: dict):
+        """
+        save company info
+        :param company_info:
+        :return:
+        """
+        mydb = self.my_client[self.db_name]
+        my_col = mydb[self.collection_name]
+        my_col.insert_one(company_info)
+        logging.debug('Save company info <%s> to mongoDB' % company_info)

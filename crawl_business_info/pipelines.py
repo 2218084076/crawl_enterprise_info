@@ -8,6 +8,7 @@
 import logging
 import re
 
+from storage.mongodb_storage import CompanyInfoMongo
 from storage.redis_storage import save_redis
 
 logging.basicConfig(filename='example.log',
@@ -96,6 +97,16 @@ def save_company_redis(company_url: str):
         logging.debug('error %s' % e)
 
 
+def save_company_info(company_info: dict):
+    """
+    save company info
+    :param company_info:
+    :return:
+    """
+    company_info_mongo = CompanyInfoMongo()
+    company_info_mongo.save_company_info(company_info)
+
+
 class CrawlBusinessInfoPipeline:
     """Crawl Business Info Pipeline"""
 
@@ -120,3 +131,7 @@ class CrawlBusinessInfoPipeline:
             company_urls = dict(item).get('company_urls')
             for url in company_urls:
                 save_company_redis(url)
+
+        if 'business_model' in dict(item):
+            company_info = dict(item)
+            save_company_info(company_info)

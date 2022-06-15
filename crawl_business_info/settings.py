@@ -69,8 +69,8 @@ SPIDER_MIDDLEWARES = {
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'crawl_business_info.middlewares.CrawlBusinessInfoDownloaderMiddleware': 543,
-    'crawl_business_info.middlewares.CrawlBusinessInfoProxyMiddleware': 543,
-    'crawl_business_info.middlewares.CrawlBusinessInfoRetryMiddleware':543
+    # 'crawl_business_info.middlewares.CrawlBusinessInfoProxyMiddleware': 543,
+    # 'crawl_business_info.middlewares.CrawlBusinessInfoRetryMiddleware':543
 }
 
 # Enable or disable extensions
