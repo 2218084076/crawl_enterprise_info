@@ -3,12 +3,11 @@ import logging
 
 import scrapy
 from bs4 import BeautifulSoup
-from scrapy.utils.project import get_project_settings
 
 from crawl_business_info.items import CompanyInfoItem, CrawlEnterpriseInfoItem
 from crawl_business_info.storage.redis_storage import read_redis
 
-settings = get_project_settings()
+logger = logging.getLogger(__name__)
 
 
 def check_city_url(items: list):
@@ -33,7 +32,7 @@ class CityCategorySpider(scrapy.Spider):
     city Category Spider
     """
     name = 'city_category_spider'
-    start_urls = ['https://b2b.11467.co']
+    start_urls = ['https://b2b.11467.com']
 
     def parse(self, response, **kwargs):
         """
@@ -58,10 +57,12 @@ class ParseMainCategory(scrapy.Spider):
     start_urls = read_redis('city')
 
     def parse(self, response, **kwargs):
+        items = []
         item = CrawlEnterpriseInfoItem()
         urls_list = response.xpath('//*[@id="il"]')
         for url in urls_list:
-            item['main_category'] = url.css('a::attr(href)').getall()
+            items.extend(url.css('a::attr(href)').getall())
+        item['main_category'] = items
 
         return item
 
@@ -74,10 +75,12 @@ class ParseDetailCategory(scrapy.Spider):
     start_urls = read_redis('main_category')
 
     def parse(self, response, **kwargs):
+        items = []
         item = CrawlEnterpriseInfoItem()
         urls_list = response.xpath('//*[@id="il"]')
         for url in urls_list:
-            item['detail_category'] = url.css('a::attr(href)').getall()
+            items.extend(url.css('a::attr(href)').getall())
+        item['detail_category'] = items
 
         return item
 
@@ -90,11 +93,12 @@ class ParseCompanyLink(scrapy.Spider):
     start_urls = read_redis('detail_category')
 
     def parse(self, response, **kwargs):
+        items = []
         item = CrawlEnterpriseInfoItem()
-        tag_list = response.xpath('//*[@id="il"]')
+        tag_list = response.xpath('//h4')
         for t in tag_list:
-            item['company_urls'] = t.css('a::attr(href)').getall()
-
+            items.append(t.css('a::attr(href)').get())
+        item['company_urls'] = items
         return item
 
 
@@ -133,5 +137,5 @@ class ParseCompanyInfo(scrapy.Spider):
         item['city'] = result_json.get('所属城市', '')
         item['company_code'] = result_json.get('顺企编码', '')
         item['shop_link'] = result_json.get('商铺', '')
-
+        logger.info('Spiders.ParseCompanyInfo %s' % item)
         return item

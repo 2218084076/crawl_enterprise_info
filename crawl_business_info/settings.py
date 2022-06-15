@@ -7,26 +7,16 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-MY_PROXY = ['http://61.144.152.209:9000', 'http://218.67.94.23:5555', 'http://114.249.112.121:9000',
-            'http://222.69.240.130:8001', 'http://218.1.200.156:57114', 'http://218.86.87.171:31661',
-            'http://123.56.175.31:3128', 'http://120.220.220.95:8085', 'http://111.225.153.123:8089',
-            'http://122.226.57.70:8888', 'http://61.191.56.60:8085', 'http://47.100.255.35:80',
-            'http://47.92.113.71:80', 'http://223.96.90.216:8085', 'http://218.1.200.167:57114',
-            'http://120.194.55.139:6969', 'http://112.6.117.135:8085', 'http://111.225.153.100:8089',
-            'http://112.6.117.178:8085', 'http://1.15.226.140:3128', 'http://221.217.50.129:9000',
-            'http://112.65.86.247:8118', 'http://47.113.90.161:83', 'http://47.112.122.163:82',
-            'http://27.157.230.138:7082', 'http://123.163.55.123:3128', 'http://111.225.153.145:8089',
-            'http://124.226.138.114:9797', 'http://47.111.176.17:88']
+
 
 BOT_NAME = 'crawl_business_info'
 
 SPIDER_MODULES = ['crawl_business_info.spiders']
 NEWSPIDER_MODULE = 'crawl_business_info.spiders'
 
-# retry settibgs
-RETRY_PROXY=True
+# retry settings
+RETRY_PROXY = True
 RETRY_TIMES = 3
-
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'crawl_business_info (+http://www.yourdomain.com)'
@@ -70,7 +60,7 @@ SPIDER_MIDDLEWARES = {
 DOWNLOADER_MIDDLEWARES = {
     'crawl_business_info.middlewares.CrawlBusinessInfoDownloaderMiddleware': 543,
     # 'crawl_business_info.middlewares.CrawlBusinessInfoProxyMiddleware': 543,
-    # 'crawl_business_info.middlewares.CrawlBusinessInfoRetryMiddleware':543
+    'crawl_business_info.middlewares.CrawlBusinessInfoRetryMiddleware': 543
 }
 
 # Enable or disable extensions
@@ -82,7 +72,8 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'crawl_business_info.pipelines.CrawlBusinessInfoPipeline': 300,
+    'crawl_business_info.pipelines.CrawlBusinessInfoPipeline': 200,
+    # 'crawl_business_info.pipelines.MongoPipeline': 300
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -105,3 +96,21 @@ ITEM_PIPELINES = {
 # HTTPCACHE_DIR = 'httpcache'
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+
+# MongoDB settings
+COLLECTIOIN_NAME = 'company_info'
+MONGO_URI = 'localhost:27017'
+MONGO_DATABASE = 'company_info'
+
+MY_PROXY = ['http://61.144.152.209:9000', 'http://218.67.94.23:5555', 'http://114.249.112.121:9000',
+            'http://222.69.240.130:8001', 'http://218.1.200.156:57114', 'http://218.86.87.171:31661',
+            'http://123.56.175.31:3128', 'http://120.220.220.95:8085', 'http://111.225.153.123:8089',
+            'http://122.226.57.70:8888', 'http://61.191.56.60:8085', 'http://47.100.255.35:80',
+            'http://47.92.113.71:80', 'http://223.96.90.216:8085', 'http://218.1.200.167:57114',
+            'http://120.194.55.139:6969', 'http://112.6.117.135:8085', 'http://111.225.153.100:8089',
+            'http://112.6.117.178:8085', 'http://1.15.226.140:3128', 'http://221.217.50.129:9000',
+            'http://112.65.86.247:8118', 'http://47.113.90.161:83', 'http://47.112.122.163:82',
+            'http://27.157.230.138:7082', 'http://123.163.55.123:3128', 'http://111.225.153.145:8089',
+            'http://124.226.138.114:9797', 'http://47.111.176.17:88']
