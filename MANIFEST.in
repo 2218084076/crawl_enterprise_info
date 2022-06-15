@@ -1,8 +1,0 @@
-include LICENSE
-include MANIFEST.in
-include *.md
-graft docs
-graft tests
-graft src/crawl_enterprise_info
-global-exclude __pycache__
-global-exclude *.py[co]
