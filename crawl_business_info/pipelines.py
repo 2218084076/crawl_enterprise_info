@@ -10,6 +10,7 @@ import re
 
 import pymongo
 from itemadapter import ItemAdapter
+from scrapy import Spider
 
 import settings
 from storage.redis_storage import save_redis
@@ -118,10 +119,11 @@ class CrawlBusinessInfoPipeline:
             mongo_db=crawler.settings.get('MONGO_DATABASE')
         )
 
-    def open_spider(self, spider):
+    def open_spider(self, spider: Spider):
         """open spider"""
         self.client = pymongo.MongoClient(self.mongo_uri)
         self.db = self.client[self.mongo_db]
+        spider.logger.info('open spider')
 
     def close_spider(self, spider):
         """close spider"""
@@ -133,17 +135,19 @@ class CrawlBusinessInfoPipeline:
             city_urls = dict(item).get('city_urls')
             for url in city_urls:
                 save_city_redis(url)
+                spider.logger.info('save_city_redis %s' % url)
 
         if 'main_category' in item:
             main_category = dict(item).get('main_category')
             for url in main_category:
                 save_main_category(url)
+                spider.logger.info('save_main_category %s' % url)
 
         if 'detail_category' in item:
             detail_category = dict(item).get('detail_category')
             for url in detail_category:
                 save_detail_category(url)
-
+                spider.logger.info('save_detail_category %s' % url)
         if 'company_urls' in item:
             company_urls = dict(item).get('company_urls')
             for url in company_urls:
@@ -151,6 +155,7 @@ class CrawlBusinessInfoPipeline:
 
         if 'business_model' in item:
             self.db[self.collection_name].insert_one(ItemAdapter(item).asdict())
+            spider.logger.info('save %s to mongo' % item)
             return item
 
 # class MongoPipeline:

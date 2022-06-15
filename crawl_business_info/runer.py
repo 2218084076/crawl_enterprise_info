@@ -16,16 +16,13 @@ settings = get_project_settings()
 
 runner = CrawlerRunner(settings)
 
+# runner.crawl(CityCategorySpider)
+# runner.crawl(ParseMainCategory)
+# runner.crawl(ParseDetailCategory)
+runner.crawl(ParseCompanyLink)
+runner.crawl(ParseCompanyInfo)
 
-@defer.inlineCallbacks
-def crawl():
-    # yield runner.crawl(CityCategorySpider)
-    yield runner.crawl(ParseMainCategory)
-    yield runner.crawl(ParseDetailCategory)
-    # yield runner.crawl(ParseCompanyLink)
-    # yield runner.crawl(ParseCompanyInfo)
-    reactor.stop()
+d = runner.join()
+d.addBoth(lambda _:reactor.stop())
 
-
-crawl()
 reactor.run()

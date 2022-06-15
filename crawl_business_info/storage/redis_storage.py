@@ -32,7 +32,7 @@ def add_url(url: str) -> bool:
     """
     res = redis_content.sadd('key', get_md5(url))  # 保存set
     if res == 0:  # 若返回0,说明插入不成功，表示有重复
-        logger.info('%s already exists' % url)
+        # logger.info('%s already exists' % url)
         return False
     else:
         return True
@@ -47,7 +47,7 @@ def save_redis(key: str, value: str):
     """
     if add_url(value):
         redis_content.lpush(key, value)
-        logger.info('save %s %s' % (key, value))
+        # logger.info('save %s %s' % (key, value))
     else:
         pass
 
@@ -60,7 +60,7 @@ def read_redis(key: str):
     """
     end_num = redis_content.llen(key)
     content = redis_content.lrange(key, 0, end_num)
-    logger.info('redis %s content is %s' % (key, content))
+    # logger.info('redis %s content is %s' % (key, content))
     return content
 
 
