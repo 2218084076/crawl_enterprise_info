@@ -2,15 +2,17 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import logging
 import random
 
 from faker import Faker
 from scrapy import signals
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
+from scrapy.utils.response import response_status_message
 
 from crawl_business_info.config import settings
 
-
+logger = logging.getLogger(__name__)
 class CrawlBusinessInfoSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
@@ -35,7 +37,7 @@ class CrawlBusinessInfoSpiderMiddleware:
         # it has processed the response.
 
         # Must return an iterable of Request, or item objects.
-        spider.logger.info(spider)
+        # spider.logger.info('CrawlBusinessInfoSpiderMiddleware spider', spider)
         for i in result:
             yield i
 
@@ -105,7 +107,7 @@ class CrawlBusinessInfoDownloaderMiddleware:
         # - return None: continue processing this exception
         # - return a Response object: stops process_exception() chain
         # - return a Request object: stops process_exception() chain
-        print(request)
+
         pass
 
     def spider_opened(self, spider):
@@ -127,7 +129,18 @@ class CrawlBusinessInfoRetryMiddleware(RetryMiddleware):
     Retry Middleware
     重试
     """
-
     def process_response(self, request, response, spider):
         if request.meta.get('dont_retry', False):
+            logger.info('response', response)
             return response
+
+        if response.status in self.retry_http_codes:
+            reason = response_status_message(response.status)
+            logger.info('reason', reason)
+            return self._retry(request, reason, spider) or response
+        return response
+
+    def process_exception(self, request, exception, spider):
+        if isinstance(exception, self.EXCEPTIONS_TO_RETRY) and request.meta.get('dont_retry', False):
+            logger.info('process_exception')
+            return self._retry(request, exception, spider)

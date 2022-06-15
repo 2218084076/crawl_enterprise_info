@@ -8,14 +8,20 @@
 import logging
 import re
 
-from storage.mongodb_storage import CompanyInfoMongo
+import pymongo
+from itemadapter import ItemAdapter
+
+import settings
 from storage.redis_storage import save_redis
 
-logging.basicConfig(filename='example.log',
-                    encoding='utf-8',
-                    level=logging.DEBUG,
-                    format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ',
-                    )
+logger = logging.getLogger(__name__)
+
+
+# logging.basicConfig(filename='example.log',
+#                     encoding='utf-8',
+#                     level=logging.DEBUG,
+#                     format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ',
+#                     )
 
 
 def save_city_redis(city_url: str):
@@ -31,7 +37,7 @@ def save_city_redis(city_url: str):
                 save_redis('city', url)
 
     except Exception as e:
-        logging.debug('error %s' % e)
+        logger.info('error %s' % e)
 
 
 def save_main_category(category: str):
@@ -52,7 +58,7 @@ def save_main_category(category: str):
 
     except Exception as e:
         save_detail_category(category)
-        logging.debug('error %s' % e)
+        logger.info('error %s' % e)
 
 
 def save_detail_category(detail_category: str):
@@ -73,7 +79,7 @@ def save_detail_category(detail_category: str):
                 save_redis('main_category', detail_category)
 
     except Exception as e:
-        logging.debug('error %s' % e)
+        logger.info('error %s' % e)
         save_company_redis(detail_category)
 
 
@@ -84,31 +90,42 @@ def save_company_redis(company_url: str):
     :return:
     """
     try:
-        if re.match("^//www.11467.com", company_url):
+        if '//www.11467.com' in company_url and 'b2b' not in company_url:
             company_url = 'https:' + company_url
             save_redis('company_links', company_url)
-            if 'https:' not in company_url:
-                company_url = 'https:' + company_url.group()
-                save_redis('company_links', company_url)
-            else:
-                save_redis('company_links', company_url)
+        else:
+            save_redis('company_links', company_url)
 
     except Exception as e:
-        logging.debug('error %s' % e)
-
-
-def save_company_info(company_info: dict):
-    """
-    save company info
-    :param company_info:
-    :return:
-    """
-    company_info_mongo = CompanyInfoMongo()
-    company_info_mongo.save_company_info(company_info)
+        logger.info('Error %s' % e)
 
 
 class CrawlBusinessInfoPipeline:
     """Crawl Business Info Pipeline"""
+
+    collection_name = settings.COLLECTIOIN_NAME
+
+    def __init__(self, mongo_uri, mongo_db):
+        self.db = None
+        self.client = None
+        self.mongo_uri = mongo_uri
+        self.mongo_db = mongo_db
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(
+            mongo_uri=crawler.settings.get('MONGO_URI'),
+            mongo_db=crawler.settings.get('MONGO_DATABASE')
+        )
+
+    def open_spider(self, spider):
+        """open spider"""
+        self.client = pymongo.MongoClient(self.mongo_uri)
+        self.db = self.client[self.mongo_db]
+
+    def close_spider(self, spider):
+        """close spider"""
+        self.client.close()
 
     def process_item(self, item, spider):
 
@@ -132,6 +149,9 @@ class CrawlBusinessInfoPipeline:
             for url in company_urls:
                 save_company_redis(url)
 
-        if 'business_model' in dict(item):
-            company_info = dict(item)
-            save_company_info(company_info)
+        if 'business_model' in item:
+            self.db[self.collection_name].insert_one(ItemAdapter(item).asdict())
+            return item
+
+# class MongoPipeline:
+#     """MongoPipeline"""
