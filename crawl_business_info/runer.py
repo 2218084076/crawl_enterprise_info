@@ -16,9 +16,9 @@ settings = get_project_settings()
 
 runner = CrawlerRunner(settings)
 
-# runner.crawl(CityCategorySpider)
-# runner.crawl(ParseMainCategory)
-# runner.crawl(ParseDetailCategory)
+runner.crawl(CityCategorySpider)
+runner.crawl(ParseMainCategory)
+runner.crawl(ParseDetailCategory)
 runner.crawl(ParseCompanyLink)
 runner.crawl(ParseCompanyInfo)
 
