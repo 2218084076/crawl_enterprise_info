@@ -104,13 +104,6 @@ COLLECTIOIN_NAME = 'company_info'
 MONGO_URI = 'localhost:27017'
 MONGO_DATABASE = 'company_info'
 
-
-# Redis Settings
-REDIS_HOST = 'localhost'
-REDIS_PORT = 6379
-REDIS_DB = 0
-DECODE_RESPONSES = True
-
 MY_PROXY = ['http://61.144.152.209:9000', 'http://218.67.94.23:5555', 'http://114.249.112.121:9000',
             'http://222.69.240.130:8001', 'http://218.1.200.156:57114', 'http://218.86.87.171:31661',
             'http://123.56.175.31:3128', 'http://120.220.220.95:8085', 'http://111.225.153.123:8089',
