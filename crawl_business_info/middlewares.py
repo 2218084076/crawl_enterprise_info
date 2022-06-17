@@ -2,17 +2,13 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-import logging
-import random
 
 from faker import Faker
 from scrapy import signals
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
 from scrapy.utils.response import response_status_message
 
-from crawl_business_info.config import settings
 
-logger = logging.getLogger(__name__)
 class CrawlBusinessInfoSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
@@ -51,7 +47,7 @@ class CrawlBusinessInfoSpiderMiddleware:
     def process_start_requests(self, start_requests, spider):
         # Called with the start requests of the spider, and works
         # similarly to the process_spider_output() method, except
-        # that it doesn’t have a response associated.
+        # that it doesn't have a response associated.
 
         # Must return only requests (not items).
         for r in start_requests:
@@ -118,10 +114,7 @@ class CrawlBusinessInfoProxyMiddleware:
     """Proxy Middleware"""
 
     def process_request(self, request, spider):
-        proxy = random.choice(settings.PROXY_LIST)
-        if proxy:
-            request.meta['proxy'] = proxy
-            yield request
+        yield request
 
 
 class CrawlBusinessInfoRetryMiddleware(RetryMiddleware):
@@ -129,18 +122,19 @@ class CrawlBusinessInfoRetryMiddleware(RetryMiddleware):
     Retry Middleware
     重试
     """
+
     def process_response(self, request, response, spider):
         if request.meta.get('dont_retry', False):
-            logger.info('response', response)
+            spider.logger.info('response', response)
             return response
 
         if response.status in self.retry_http_codes:
             reason = response_status_message(response.status)
-            logger.info('reason', reason)
+            spider.logger.info('reason', reason)
             return self._retry(request, reason, spider) or response
         return response
 
     def process_exception(self, request, exception, spider):
         if isinstance(exception, self.EXCEPTIONS_TO_RETRY) and request.meta.get('dont_retry', False):
-            logger.info('process_exception')
+            spider.logger.info('process_exception')
             return self._retry(request, exception, spider)
