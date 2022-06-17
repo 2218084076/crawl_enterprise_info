@@ -13,7 +13,7 @@ from itemadapter import ItemAdapter
 from scrapy import Spider
 
 import settings
-from storage.redis_storage import save_redis
+from storage.redis_storage import RedisBase
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,12 @@ def save_city_redis(city_url: str):
     :param city_url:
     :return:
     """
+    redis_base = RedisBase()
     try:
         if '//www.11467.com' in city_url:
             if 'http' not in city_url:
                 url = 'http:%s' % city_url
-                save_redis('city', url)
+                redis_base.save_redis('city', url)
 
     except Exception as e:
         logger.info('error %s' % e)
@@ -47,12 +48,13 @@ def save_main_category(category: str):
     :param category:
     :return:
     """
+    redis_base = RedisBase()
     try:
         if 'https://' not in category:
-            category = 'httpds://' + category
+            category = 'https://' + category
         else:
             if 'https://' in category and '.htm' in category and 'info' not in category:
-                save_redis('main_category', category)
+                redis_base.save_redis('main_category', category)
 
             if '//www.11467.com/' in category and 'http' not in category and '.htm' in category and category != '//www.11467.com/':
                 save_company_redis(category)
@@ -68,16 +70,18 @@ def save_detail_category(detail_category: str):
     :param detail_category:
     :return:
     """
+    redis_base = RedisBase()
+
     try:
         if 'https://' not in detail_category:
-            detail_category = 'httpds://' + detail_category
+            detail_category = 'https://' + detail_category
         else:
             if re.match("^https.*.htm$", detail_category):
-                save_redis('detail_category', detail_category)
+                redis_base.save_redis('detail_category', detail_category)
             if re.match("^//b2b.*.htm$", detail_category):
-                save_redis('detail_category', detail_category)
+                redis_base.save_redis('detail_category', detail_category)
             if re.match("^http://www.11467.com", detail_category):
-                save_redis('main_category', detail_category)
+                redis_base.save_redis('main_category', detail_category)
 
     except Exception as e:
         logger.info('error %s' % e)
@@ -90,12 +94,14 @@ def save_company_redis(company_url: str):
     :param company_url:
     :return:
     """
+    redis_base = RedisBase()
+
     try:
         if '//www.11467.com' in company_url and 'b2b' not in company_url:
             company_url = 'https:' + company_url
-            save_redis('company_links', company_url)
+            redis_base.save_redis('company_links', company_url)
         else:
-            save_redis('company_links', company_url)
+            redis_base.save_redis('company_links', company_url)
 
     except Exception as e:
         logger.info('Error %s' % e)
@@ -128,6 +134,7 @@ class CrawlBusinessInfoPipeline:
     def close_spider(self, spider):
         """close spider"""
         self.client.close()
+        spider.logger.info('close spider')
 
     def process_item(self, item, spider):
 
@@ -157,9 +164,3 @@ class CrawlBusinessInfoPipeline:
             self.db[self.collection_name].insert_one(ItemAdapter(item).asdict())
             spider.logger.info('save %s to mongo' % item)
             return item
-
-
-
-
-
-

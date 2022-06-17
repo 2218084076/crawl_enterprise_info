@@ -5,26 +5,9 @@ import scrapy
 from bs4 import BeautifulSoup
 
 from crawl_business_info.items import CompanyInfoItem, CrawlEnterpriseInfoItem
-from crawl_business_info.storage.redis_storage import read_redis
+from storage.redis_storage import RedisBase
 
 logger = logging.getLogger(__name__)
-
-
-def check_city_url(items: list):
-    """
-    check url
-    :param items:
-    :return:
-    """
-    urls = []
-
-    for i in items:
-        if '//www.11467.com' in i:
-            if 'http' not in i:
-                url = 'http:%s' % i
-                urls.append(url)
-
-    return urls
 
 
 class CityCategorySpider(scrapy.Spider):
@@ -53,8 +36,10 @@ class ParseMainCategory(scrapy.Spider):
     """
     为读city category url列表 获取分类链接
     """
+    redis_base = RedisBase()
+
     name = 'parse_main_category'
-    start_urls = read_redis('city')
+    start_urls = redis_base.read_redis('city')
 
     def parse(self, response, **kwargs):
         items = []
@@ -71,8 +56,10 @@ class ParseDetailCategory(scrapy.Spider):
     """
     解析详情分类链接
     """
+    redis_base = RedisBase()
+
     name = 'parse_detail_category'
-    start_urls = read_redis('main_category')
+    start_urls = redis_base.read_redis('main_category')
 
     def parse(self, response, **kwargs):
         items = []
@@ -89,8 +76,10 @@ class ParseCompanyLink(scrapy.Spider):
     """
     解析公司详情页
     """
+    redis_base = RedisBase()
+
     name = 'parse_company_link'
-    start_urls = read_redis('detail_category')
+    start_urls = redis_base.read_redis('detail_category')
 
     def parse(self, response, **kwargs):
         items = []
@@ -106,9 +95,11 @@ class ParseCompanyInfo(scrapy.Spider):
     """
     Parse Company Info
     """
+    redis_base = RedisBase()
+
     name = 'parse_company_info'
     allowed_domains = ['parse_company_info.org']
-    start_urls = read_redis('company_links')
+    start_urls = redis_base.read_redis('company_links')
 
     def parse(self, response, **kwargs):
         """

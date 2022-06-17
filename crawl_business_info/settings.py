@@ -8,7 +8,6 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 
-
 BOT_NAME = 'crawl_business_info'
 
 SPIDER_MODULES = ['crawl_business_info.spiders']
@@ -96,7 +95,6 @@ ITEM_PIPELINES = {
 # HTTPCACHE_DIR = 'httpcache'
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
-
 
 
 # MongoDB settings
