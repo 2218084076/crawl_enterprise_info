@@ -155,6 +155,7 @@ class CrawlBusinessInfoPipeline:
             for url in detail_category:
                 save_detail_category(url)
                 spider.logger.info('save_detail_category %s' % url)
+
         if 'company_urls' in item:
             company_urls = dict(item).get('company_urls')
             for url in company_urls:

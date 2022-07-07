@@ -130,3 +130,4 @@ class ParseCompanyInfo(scrapy.Spider):
         item['shop_link'] = result_json.get('商铺', '')
         logger.info('Spiders.ParseCompanyInfo %s' % item)
         return item
+
