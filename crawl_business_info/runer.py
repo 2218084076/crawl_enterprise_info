@@ -4,7 +4,7 @@ import logging
 from scrapy.crawler import CrawlerRunner
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 
 from spiders.spider import ParseCompanyLink, ParseCompanyInfo, CityCategorySpider, ParseMainCategory, \
     ParseDetailCategory
@@ -16,16 +16,13 @@ settings = get_project_settings()
 
 runner = CrawlerRunner(settings)
 
+runner.crawl(CityCategorySpider)
+runner.crawl(ParseMainCategory)
+runner.crawl(ParseDetailCategory)
+runner.crawl(ParseCompanyLink)
+runner.crawl(ParseCompanyInfo)
 
-@defer.inlineCallbacks
-def crawl():
-    # yield runner.crawl(CityCategorySpider)
-    yield runner.crawl(ParseMainCategory)
-    yield runner.crawl(ParseDetailCategory)
-    # yield runner.crawl(ParseCompanyLink)
-    # yield runner.crawl(ParseCompanyInfo)
-    reactor.stop()
+d = runner.join()
+d.addBoth(lambda _: reactor.stop())
 
-
-crawl()
 reactor.run()

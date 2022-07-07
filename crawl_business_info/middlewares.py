@@ -10,9 +10,11 @@ from scrapy import signals
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
 from scrapy.utils.response import response_status_message
 
-from crawl_business_info.config import settings
+import settings
 
 logger = logging.getLogger(__name__)
+
+
 class CrawlBusinessInfoSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
@@ -25,7 +27,7 @@ class CrawlBusinessInfoSpiderMiddleware:
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
 
-    def process_spider_input(self, response, spider):
+    def process_spider_input(response, spider):
         # Called for each response that goes through the spider
         # middleware and into the spider.
 
@@ -37,7 +39,7 @@ class CrawlBusinessInfoSpiderMiddleware:
         # it has processed the response.
 
         # Must return an iterable of Request, or item objects.
-        # spider.logger.info('CrawlBusinessInfoSpiderMiddleware spider', spider)
+        spider.logger.info('CrawlBusinessInfoSpiderMiddleware spider', spider)
         for i in result:
             yield i
 
@@ -118,7 +120,7 @@ class CrawlBusinessInfoProxyMiddleware:
     """Proxy Middleware"""
 
     def process_request(self, request, spider):
-        proxy = random.choice(settings.PROXY_LIST)
+        proxy = random.choice(settings.get('MY_PROXY'))
         if proxy:
             request.meta['proxy'] = proxy
             yield request
@@ -129,6 +131,7 @@ class CrawlBusinessInfoRetryMiddleware(RetryMiddleware):
     Retry Middleware
     重试
     """
+
     def process_response(self, request, response, spider):
         if request.meta.get('dont_retry', False):
             logger.info('response', response)
