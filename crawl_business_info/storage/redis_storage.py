@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class RedisBase:
+    """Redis Base"""
+
     host = 'localhost'
     port = 6379
     db = 0
@@ -26,14 +28,25 @@ class RedisBase:
         self.redis_content = redis.Redis(connection_pool=self.pool)
 
     def add_url(self, url: str):
+        """
+        add_url
+        :param url:
+        :return:
+        """
         res = self.redis_content.sadd('key', get_md5(url))
 
         if res == 0:
             return False
-        else:
-            return True
+
+        return True
 
     def save_redis(self, key: str, value: str):
+        """
+        save_redis
+        :param key:
+        :param value:
+        :return:
+        """
         if self.add_url(value):
             self.redis_content.lpush(key, value)
 
@@ -41,6 +54,11 @@ class RedisBase:
             pass
 
     def read_redis(self, key: str):
+        """
+        read_redis
+        :param key:
+        :return:
+        """
         end_num = self.redis_content.llen(key)
         content = self.redis_content.lrange(key, 0, end_num)
         return content

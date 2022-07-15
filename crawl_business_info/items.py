@@ -1,19 +1,15 @@
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
-
+"""Items"""
 import scrapy
 
 
 class CrawlEnterpriseInfoItem(scrapy.Item):
+    """Crawl Enterprise Info Item"""
     # define the fields for your item here like:
     # name = scrapy.Field()
     city_urls = scrapy.Field()
     main_category = scrapy.Field()
     detail_category = scrapy.Field()
     company_urls = scrapy.Field()
-    pass
 
 
 class CompanyInfoItem(scrapy.Item):
@@ -29,4 +25,3 @@ class CompanyInfoItem(scrapy.Item):
     city = scrapy.Field()
     company_code = scrapy.Field()
     shop_link = scrapy.Field()
-    pass

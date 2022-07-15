@@ -4,10 +4,10 @@ import logging
 from scrapy.crawler import CrawlerRunner
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
+from spiders.spider import (CityCategorySpider, ParseCompanyInfo,
+                            ParseCompanyLink, ParseDetailCategory,
+                            ParseMainCategory)
 from twisted.internet import reactor
-
-from spiders.spider import ParseCompanyLink, ParseCompanyInfo, CityCategorySpider, ParseMainCategory, \
-    ParseDetailCategory
 
 logger = logging.getLogger(__name__)
 

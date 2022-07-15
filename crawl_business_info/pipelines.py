@@ -18,13 +18,6 @@ from storage.redis_storage import RedisBase
 logger = logging.getLogger(__name__)
 
 
-# logging.basicConfig(filename='example.log',
-#                     encoding='utf-8',
-#                     level=logging.DEBUG,
-#                     format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ',
-#                     )
-
-
 def save_city_redis(city_url: str):
     """
     save_to_redis
@@ -120,23 +113,42 @@ class CrawlBusinessInfoPipeline:
 
     @classmethod
     def from_crawler(cls, crawler):
+        """
+        from_crawler
+        :param crawler:
+        :return:
+        """
         return cls(
             mongo_uri=crawler.settings.get('MONGO_URI'),
             mongo_db=crawler.settings.get('MONGO_DATABASE')
         )
 
     def open_spider(self, spider: Spider):
-        """open spider"""
+        """
+        open spider
+        :param spider:
+        :return:
+        """
         self.client = pymongo.MongoClient(self.mongo_uri)
         self.db = self.client[self.mongo_db]
         spider.logger.info('open spider')
 
     def close_spider(self, spider):
-        """close spider"""
+        """
+        close spider
+        :param spider:
+        :return:
+        """
         self.client.close()
         spider.logger.info('close spider')
 
     def process_item(self, item, spider):
+        """
+        process_item
+        :param item:
+        :param spider:
+        :return:
+        """
 
         if 'city_urls' in item:
             city_urls = dict(item).get('city_urls')

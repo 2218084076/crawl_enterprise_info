@@ -3,9 +3,9 @@ import logging
 
 import scrapy
 from bs4 import BeautifulSoup
+from crawl_business_info.storage.redis_storage import RedisBase
 
 from crawl_business_info.items import CompanyInfoItem, CrawlEnterpriseInfoItem
-from storage.redis_storage import RedisBase
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ class CityCategorySpider(scrapy.Spider):
         """
         item = CrawlEnterpriseInfoItem()
         urls_list = response.xpath('//*[@id="il"]')
-        for u in urls_list:
-            item['city_urls'] = u.css('a::attr(href)').getall()  # 所有城市link
+        for url in urls_list:
+            item['city_urls'] = url.css('a::attr(href)').getall()  # 所有城市link
 
         return item
 
@@ -42,6 +42,12 @@ class ParseMainCategory(scrapy.Spider):
     start_urls = redis_base.read_redis('city')
 
     def parse(self, response, **kwargs):
+        """
+        parse
+        :param response:
+        :param kwargs:
+        :return:
+        """
         items = []
         item = CrawlEnterpriseInfoItem()
         urls_list = response.xpath('//*[@id="il"]')
@@ -62,6 +68,12 @@ class ParseDetailCategory(scrapy.Spider):
     start_urls = redis_base.read_redis('main_category')
 
     def parse(self, response, **kwargs):
+        """
+        parse
+        :param response:
+        :param kwargs:
+        :return:
+        """
         items = []
         item = CrawlEnterpriseInfoItem()
         urls_list = response.xpath('//*[@id="il"]')
@@ -82,11 +94,17 @@ class ParseCompanyLink(scrapy.Spider):
     start_urls = redis_base.read_redis('detail_category')
 
     def parse(self, response, **kwargs):
+        """
+        parse
+        :param response:
+        :param kwargs:
+        :return:
+        """
         items = []
         item = CrawlEnterpriseInfoItem()
         tag_list = response.xpath('//h4')
-        for t in tag_list:
-            items.append(t.css('a::attr(href)').get())
+        for tag in tag_list:
+            items.append(tag.css('a::attr(href)').get())
         item['company_urls'] = items
         return item
 
@@ -128,6 +146,5 @@ class ParseCompanyInfo(scrapy.Spider):
         item['city'] = result_json.get('所属城市', '')
         item['company_code'] = result_json.get('顺企编码', '')
         item['shop_link'] = result_json.get('商铺', '')
-        logger.info('Spiders.ParseCompanyInfo %s' % item)
+        logger.info('Spiders.ParseCompanyInfo {}'.format(item))
         return item
-

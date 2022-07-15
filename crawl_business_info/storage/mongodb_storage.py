@@ -6,11 +6,13 @@ import pymongo
 logging.basicConfig(filename='example.log',
                     encoding='utf-8',
                     level=logging.DEBUG,
-                    format=' %(asctime)s - %(levelname)s - %(message)s - %(funcName)s - %(lineno)d: ',
+                    format=' %(asctime)s - %(levelname)s - '
+                           '%(message)s - %(funcName)s - %(lineno)d: ',
                     )
 
 
 class CompanyInfoMongo:
+    """Company Info Mongo"""
 
     def __init__(self):
         self.mydb = None
